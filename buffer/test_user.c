@@ -47,6 +47,25 @@ int main(int argc, char *argv[]) {
 	///////////////////////////////////////////////////
 
 	printf("\n\n\n");
+	printf("Example of somewhat filled buffer\n");
+	init_state = init_buffer_421();
+        //printf("init finished, %ld\n", init_state);
+
+        insert_state = insert_buffer_421(1);
+        insert_state = insert_buffer_421(2);
+        insert_state = insert_buffer_421(3);
+        insert_state = insert_buffer_421(4);
+
+	print_status = print_buffer_421();
+        //printf("print finished, %ld\n", print_status);
+
+        del_state = delete_buffer_421();
+        //printf("Delete finished, %ld\n",del_state);
+
+
+	///////////////////////////////////////////////////
+
+	printf("\n\n\n");
 	printf("Example of empty buffer\n");
 	printf("Insert into empty buffer\n");
 	insert_state = insert_buffer_421(1);

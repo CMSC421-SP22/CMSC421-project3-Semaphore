@@ -2,13 +2,10 @@
 #include <stdio.h>
 #include "buffer.h"
 
+// Global variables
 struct node_421* head = NULL;
 struct ring_buffer_421* buffer = NULL;
-
 int bufferLength = 0;
-int readIndex = 0;
-int writeIndex = 0;
-int size_of_buffer = 20;
 
 long init_buffer_421(void) {
 	long function_completion = 0;
@@ -16,11 +13,9 @@ long init_buffer_421(void) {
 		printf("Buffer not empty, try to delete\n");
 		function_completion = -1;
 	}else{
-		printf("else\n");
 		// Initialize new buffer - 20 nodes
        		while((bufferLength < SIZE_OF_BUFFER) && (function_completion != -1)){
 			// Allocating new memory for each node, data = 0
-			printf("Make new node\n");
 			struct node_421* newNode; 
 			newNode =(struct node_421*) malloc(sizeof(struct node_421));
 			newNode->data = 0;
@@ -31,13 +26,11 @@ long init_buffer_421(void) {
 			}else if(head == NULL){
 				head = newNode;
 				bufferLength++;
-				printf("Inserted new node as head\n");
 			}else{
 				struct node_421 *temp = head;
 				while(temp->next != NULL){
 					temp=temp->next;
 				}
-				printf("New node added in ring buffer\n");
 				temp->next = newNode;
 				bufferLength++;
 			}
@@ -48,9 +41,8 @@ long init_buffer_421(void) {
                 	temp=temp->next;
 			//temp->next = head;
         	}
-		temp->next = head->next;
+		temp->next = head;
 	}
-	printf("buffer node\n");
 	//make start buffer
 	struct ring_buffer_421* buff_node;
 	buff_node = (struct ring_buffer_421*) malloc (sizeof(struct ring_buffer_421));
@@ -59,29 +51,25 @@ long init_buffer_421(void) {
 	buffer->read = head;
 	buffer->write = head;
 
-	printf("Done here\n");
-	printf("buffersize %d\n", bufferLength);
 	if((bufferLength < SIZE_OF_BUFFER) || (bufferLength > SIZE_OF_BUFFER)){
 		printf("initializing failed\n");
 		function_completion = -1;
 	}
 	//reset bufferLength for later initializing
 	bufferLength = 0;
-	printf("\n\n\n");
         return function_completion;
 }
 
 
 long insert_buffer_421(int i){
         long function_completion = 0;
-
 	// check if buffer is initialized, fail if not
 	if(head == NULL){
 		printf("uninitialized buffer\n");
 		function_completion = -1;
 	// Inserting fails if the buffer is already full
 	}else if(buffer->length == SIZE_OF_BUFFER){
-		printf("Buffer is full\n");
+		printf("Buffer is full, unable to add\n");
 		buffer->write = head;
 		function_completion = -1;
 	// Insert the int i into the next node, increment buffer length
@@ -90,9 +78,9 @@ long insert_buffer_421(int i){
 		//regular insert into buffer
 		struct node_421* temp = buffer->write;
                	temp->data = i;
-        	printf("ring_buffer_421 inserted: %d\n", temp->data);
 	        buffer->write = temp->next;
 	        buffer->length++;
+
 		//successful insert
 		function_completion = 0;
 	}
@@ -100,64 +88,54 @@ long insert_buffer_421(int i){
 }
 
 long print_buffer_421(void){
-	printf("\n\n\n");
         long function_completion = 0;
 	// check if buffer is initialized, fail if not
 	if(head == NULL){
-		printf("buffer is emtpy, try to initialize\n");
+		printf("Unable to print: buffer is emtpy, try to initialize\n");
 		function_completion = -1;
 	// reader is up to date, nothing to print
 	}else if((buffer->read == buffer->write) && (buffer->read != head) && (buffer->length == SIZE_OF_BUFFER)){
-		printf("read is same as write\n");
+		printf("Unable to print: read is same as print\n");
 		function_completion = -1;
 	}else{
+		// insert new data and move write pointer up
 		struct node_421* temp;
-		printf("read buffer until it hits recent node\n");
 		temp = buffer->read;
-                fprintf(stdout, "Node data: %d\n",temp->data); 
+                fprintf(stdout, "Node data: %d\n",temp->data);
                 buffer->read = temp->next;
-
 		while(buffer->read != buffer->write){
 			temp = buffer->read;
-			fprintf(stdout, "Node data: %d\n",temp->data); 
+			fprintf(stdout, "Node data: %d\n",temp->data);
 			buffer->read = temp->next;
 		}
-		printf("successful read\n");
 		function_completion = 0;
 	}
-	printf("about to exit print function\n");
-
-
         return function_completion;
 }
 
 
 long delete_buffer_421(void) {
-        printf("\n\n\n");
 	long function_completion = 0;
 	int round = SIZE_OF_BUFFER;
-
-	printf("Enter deletion\n");
-	printf("size number %d\n", buffer->length);
-
-	free(buffer);
-	buffer = NULL;
-	printf("Free buffer\n");
-	//if buffer exists, delete
+	//checks if buffer exist
 	if(head != NULL){
+		free(buffer);
+		buffer = NULL;
+		//if buffer exists, delete
 		// write your code to delete buffer and other unwanted components
 		struct node_421* temp;
         	temp = head;
 		while(round != 0){
 			temp = head;
 			head = temp->next;
-			printf("Delete temp\n");
 			free(temp);
-		round--;
+			round--;
 		}
-		printf("\nHere delete the buffer\n");
+		head = NULL;
+	}else{
+                printf("No buffer exists\n");
+                function_completion = -1;
 	}
-	head = NULL;
 
 	//double check if its really deleted
 	if(head != NULL){

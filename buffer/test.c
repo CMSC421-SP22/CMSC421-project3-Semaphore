@@ -17,7 +17,7 @@ long init_buffer_421_syscall(void){
 
 #define __NR_insert_buffer_421 443
 long insert_buffer_421_syscall(int i){
-        return syscall(__NR_insert_buffer_421);
+        return syscall(__NR_insert_buffer_421(int i));
 }
 
 #define __NR_print_buffer_421 444

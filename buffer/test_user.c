@@ -35,13 +35,10 @@ int main(int argc, char *argv[]) {
         insert_state = insert_buffer_421(21);
         insert_state = insert_buffer_421(22);
         insert_state = insert_buffer_421(23);
-
-        //long insert_state = insert_buffer_421(4);
-
         printf("Insert finished, %ld\n", insert_state);
 
-
-
+	long print_status = print_buffer_421();
+	printf("print finished, %ld\n", print_status);
 
 	long del_state = delete_buffer_421();
 	printf("Delete finished, %ld\n",del_state);

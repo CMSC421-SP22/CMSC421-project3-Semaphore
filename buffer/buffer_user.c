@@ -67,6 +67,7 @@ long init_buffer_421(void) {
 	}
 	//reset bufferLength for later initializing
 	bufferLength = 0;
+	printf("\n\n\n");
         return function_completion;
 }
 
@@ -74,7 +75,7 @@ long init_buffer_421(void) {
 long insert_buffer_421(int i){
         long function_completion = 0;
 
-	// check if buffer is initialized
+	// check if buffer is initialized, fail if not
 	if(head == NULL){
 		printf("uninitialized buffer\n");
 		function_completion = -1;
@@ -83,59 +84,57 @@ long insert_buffer_421(int i){
 		printf("Buffer is full\n");
 		buffer->write = head;
 		function_completion = -1;
-	// Insert the int i into the next node, increment bufferLength
+	// Insert the int i into the next node, increment buffer length
 	// Returns 0 if insert is successful, otherwise -1 if it fails
-
-	//}else if((ring_buffer_421->write == head) && (ring_buffer_421->length == 0)){
-	//	ring_buffer_421->write->data = i;
-	//	ring_buffer_421->write = ring_buffer_421->write->next
-	//	ring_buffer_421->length++;
-
 	}else{
-		//if((ring_buffer_421->write == head) && (ring_buffer_421->length == 0)){
-
-		//if (ring_buffer_421->write == head){
-		//	printf("\nBack to start, buffer full now\n");
-		//	function_completion = -1;
-		//}else{
-
-			struct node_421* temp = buffer->write;
-               		temp->data = i;
-        	        printf("ring_buffer_421 inserted: %d\n", temp->data);
-	                buffer->write = temp->next;
-	                buffer->length++;
-			//successful insert
-			function_completion = 0;
-		//}
+		//regular insert into buffer
+		struct node_421* temp = buffer->write;
+               	temp->data = i;
+        	printf("ring_buffer_421 inserted: %d\n", temp->data);
+	        buffer->write = temp->next;
+	        buffer->length++;
+		//successful insert
+		function_completion = 0;
 	}
-	//printf("Something went wrong\n");
 	return function_completion;
 }
 
 long print_buffer_421(void){
+	printf("\n\n\n");
         long function_completion = 0;
-
+	// check if buffer is initialized, fail if not
 	if(head == NULL){
 		printf("buffer is emtpy, try to initialize\n");
 		function_completion = -1;
+	// reader is up to date, nothing to print
+	}else if((buffer->read == buffer->write) && (buffer->read != head) && (buffer->length == SIZE_OF_BUFFER)){
+		printf("read is same as write\n");
+		function_completion = -1;
 	}else{
+		struct node_421* temp;
 		printf("read buffer until it hits recent node\n");
+		temp = buffer->read;
+                fprintf(stdout, "Node data: %d\n",temp->data); 
+                buffer->read = temp->next;
 
-
+		while(buffer->read != buffer->write){
+			temp = buffer->read;
+			fprintf(stdout, "Node data: %d\n",temp->data); 
+			buffer->read = temp->next;
+		}
+		printf("successful read\n");
+		function_completion = 0;
 	}
+	printf("about to exit print function\n");
 
 
-	printf("\nHere print the buffer\n");
-	//fail return
-	return -1;
-
-	//successful return
-        return 0;
+        return function_completion;
 }
 
 
 long delete_buffer_421(void) {
-        long function_completion = 0;
+        printf("\n\n\n");
+	long function_completion = 0;
 	int round = SIZE_OF_BUFFER;
 
 	printf("Enter deletion\n");

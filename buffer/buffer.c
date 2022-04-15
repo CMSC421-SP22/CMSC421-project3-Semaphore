@@ -15,18 +15,18 @@ SYSCALL_DEFINE0(hello) {
 SYSCALL_DEFINE0(init_buffer_421){
 	long function_completion = 0;
 	if(head != NULL){
-		printf("Buffer not empty, try to delete\n");
+		printk("Buffer not empty, try to delete\n");
 		function_completion = -1;
 	}else{
 		// Initialize new buffer - 20 nodes
        		while((bufferLength < SIZE_OF_BUFFER) && (function_completion != -1)){
 			// Allocating new memory for each node, data = 0
 			struct node_421* newNode; 
-			newNode =(struct node_421*) kmalloc(sizeof(struct node_421));
+			newNode =(struct node_421*) kmalloc(sizeof(struct node_421), GFP_KERNEL);
 			newNode->data = 0;
 			newNode->next = NULL;
 			if(newNode == NULL){
-				printf("Error!\n");
+				printk("Error!\n");
 				function_completion = -1;
 			}else if(head == NULL){
 				head = newNode;
@@ -50,14 +50,14 @@ SYSCALL_DEFINE0(init_buffer_421){
 	}
 	//make start buffer
 	struct ring_buffer_421* buff_node;
-	buff_node = (struct ring_buffer_421*) kmalloc (sizeof(struct ring_buffer_421));
+	buff_node = (struct ring_buffer_421*) kmalloc(sizeof(struct ring_buffer_421), GFP_KERNEL);
 	buffer = buff_node;
 	buffer->length = 0;
 	buffer->read = head;
 	buffer->write = head;
 
 	if((bufferLength < SIZE_OF_BUFFER) || (bufferLength > SIZE_OF_BUFFER)){
-		printf("initializing failed\n");
+		printk("initializing failed\n");
 		function_completion = -1;
 	}
 	//reset bufferLength for later initializing
@@ -69,11 +69,11 @@ SYSCALL_DEFINE0(insert_buffer_421){
         long function_completion = 0;
 	// check if buffer is initialized, fail if not
 	if(head == NULL){
-		printf("uninitialized buffer\n");
+		printk("uninitialized buffer\n");
 		function_completion = -1;
 	// Inserting fails if the buffer is already full
 	}else if(buffer->length == SIZE_OF_BUFFER){
-		printf("Buffer is full, unable to add\n");
+		printk("Buffer is full, unable to add\n");
 		buffer->write = head;
 		function_completion = -1;
 	// Insert the int i into the next node, increment buffer length
@@ -95,17 +95,17 @@ SYSCALL_DEFINE0(print_buffer_421){
         long function_completion = 0;
 	// check if buffer is initialized, fail if not
 	if(head == NULL){
-		printf("Unable to print: buffer is emtpy, try to initialize\n");
+		printk("Unable to print: buffer is emtpy, try to initialize\n");
 		function_completion = -1;
 	// reader is up to date, nothing to print
 	}else if((buffer->read == buffer->write) && (buffer->read != head) && (buffer->length == SIZE_OF_BUFFER)){
-		printf("Unable to print: read is same as print\n");
+		printk("Unable to print: read is same as print\n");
 		function_completion = -1;
 	}else{
 		// insert new data and move write pointer up
 		struct node_421* temp;
 		temp = buffer->read;
-                fprintf(stdout, "Node data: %d\n",temp->data);
+                printk("Node data: %d\n",temp->data);
                 buffer->read = temp->next;
 		while(buffer->read != buffer->write){
 			temp = buffer->read;
@@ -136,7 +136,7 @@ SYSCALL_DEFINE0(delete_buffer_421){
 		}
 		head = NULL;
 	}else{
-                printf("No buffer exists\n");
+                printk("No buffer exists\n");
                 function_completion = -1;
 	}
 

@@ -75,11 +75,11 @@ int main(int argc, char *argv[]) {
 
 	long print_status;
 	print_status = print_buffer_421_syscall();
-	//printf("print finished, %ld\n", print_status);
+	printf("print finished, %ld\n", print_status);
 
 	long del_state;
 	del_state = delete_buffer_421_syscall();
-	//printf("Delete finished, %ld\n",del_state);
+	printf("Delete finished, %ld\n",del_state);
 
 
 	return 0;

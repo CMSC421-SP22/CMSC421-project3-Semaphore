@@ -65,7 +65,7 @@ SYSCALL_DEFINE0(init_buffer_421){
         return function_completion;
 }
 
-SYSCALL_DEFINE0(insert_buffer_421){
+SYSCALL_DEFINE1(insert_buffer_421, int, i){
         long function_completion = 0;
 	// check if buffer is initialized, fail if not
 	if(head == NULL){

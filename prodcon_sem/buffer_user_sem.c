@@ -1,5 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <pthread.h>
+#include <semaphore.h>
+
 #include "buffer.h"
 
 // Global variables
@@ -62,9 +65,9 @@ long function_completion = 0;
 
 long enqueue_buffer_421(char *data){
       	/////////////////////////
-	//copy of part 1
-	// producer
-	//////////////////
+	// copy of part 1
+	// enqueue ;; producer
+	/////////////////////////
 	long function_completion = 0;
 	// check if buffer is initialized, fail if not
 	if(head == NULL){
@@ -73,14 +76,17 @@ long enqueue_buffer_421(char *data){
 	// Inserting fails if the buffer is already full
 	}else if(buffer->length == SIZE_OF_BUFFER){
 		printf("Buffer is full, unable to add\n");
-		buffer->write = head;
+		//////////////
+                // sem lock //
+                //////////////
+		//wake_up(consumer);
 		function_completion = -1;
 	// Insert the int i into the next node, increment buffer length
 	// Returns 0 if insert is successful, otherwise -1 if it fails
 	}else{
 		//regular insert into buffer
 		struct node_421* temp = buffer->write;
-               	temp->data = i;
+               	temp->data = data;
 	        buffer->write = temp->next;
 	        buffer->length++;
 
@@ -92,9 +98,27 @@ long enqueue_buffer_421(char *data){
 
 long dequeue_buffer_421(char *data){
 	///////////////////////
-	/// dequee/
-	//////
-
+	/// dequeue ;; consumer
+	///////////////////////
+	long function_completion = 0;
+        // check if buffer is initialized, fail if not
+        if(head == NULL){
+                printf("uninitialized buffer\n");
+                function_completion = -1;
+	}else if(buffer->length == 0){
+		// buffer is empty
+		//////////////
+		// sem lock //
+		//////////////
+		function_completion = -1;
+	}else{
+		struct node_421* temp = buffer->read;
+		temp->data = 0;
+		buffer->read = temp->next;
+		buffer->length--;
+		function_completion = 0;
+	}
+	return function_completion;
 
 }
 
@@ -130,9 +154,9 @@ long delete_buffer_421(void){
 }
 
 void print_semaphores(void){
-	/////////////////////
-	// this should execute when consumer deques
-	/////////////////////
+	/////////////////////////////////////////////
+	// this should execute when consumer 
+	/////////////////////////////////////////////
         long function_completion = 0;
 	// check if buffer is initialized, fail if not
 	if(head == NULL){

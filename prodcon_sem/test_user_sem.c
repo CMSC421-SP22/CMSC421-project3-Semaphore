@@ -6,50 +6,57 @@
 
 #include "buffer_sem.h"
 
-sem_t mutex;
+int max_exec = 30; // max # of times it will produce/consume
 
 void* thread_producer(void* arg){
 
+	int *incoming = (char *)
+	char charValue = incoming+'0';
+
+	
+
+
 	sleep(rand() % 11);
 	//lock enqueue if its full?
-	sem_wait(&mutex);
 	printf("Produced\n");
 
 }
 
-void* thread_consumer(void* arg){
+void* thread_consumer(void*arg){
 
-        sleep(rand() % 11);
-
-        printf("Consume\n");
-        sem_post(&mutex);
 
 }
 
-
 int main(int argc, char *argv[]) {
 
-	printf("Example of full buffer scenario\n");
-	long init_state = init_buffer_421();
-	//printf("init finished, %ld\n", init_state);
+	void *thread_result;
+	int num_value = 0;
+	int time_exec = 0;
+	int prod_cons_exec = 0;
+	// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0
 
-	sem_init(&mutex, 0, 1);
+	//printf("Example of full buffer scenario\n");
+	long init_state = init_buffer_421();
+	printf("init finished, %ld\n", init_state);
+
+	//sem_init(&mutex, 0, 1);
 	pthread_t tid_producer;
 	pthread_t tid_consumer;
+
+	//if produce enques 4 times -> consume will enque 4 times (randomizer = same for both called)
+	while(time_exec != max_exec){
+
+		prod_cons_exec = (rand() % 20);
+		for(
+		pthread_create(tid_produce, NULL, thread_producer, num_value)
+		pthread_create(tid_consumer, NULL, thread_consumer, num_value)
 	
+		num_value++;
+		if(num_value == 10){
+			num_value = 0;
+		}
 
-	for(int i = 0; i <10; i++){
-
-		sleep(rand() % 11);
-		// enqueue function here
-
-		sleep(rand() % 11);
-		// dequeue function here
 	}
-
-
-	long print_status = print_buffer_421();
-	//printf("print finished, %ld\n", print_status);
 
 	long del_state = delete_buffer_421();
 	//printf("Delete finished, %ld\n",del_state);

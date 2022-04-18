@@ -10,12 +10,20 @@ struct node_421* head = NULL;
 struct ring_buffer_421* buffer = NULL;
 int bufferLength = 0;
 
+sem_t consumer_empty;
+sem_t producer_full;
+sem_t mutex;
+
 long init_buffer_421(void){
-long function_completion = 0;
+	long function_completion = 0;
 	if(head != NULL){
 		printf("Buffer not empty, try to delete\n");
 		function_completion = -1;
 	}else{
+		int sem_init(consumer_empty, 0, 20);
+		int sem_init(producer_full, 0, 0)
+
+
 		// Initialize new buffer - 20 nodes
        		while((bufferLength < SIZE_OF_BUFFER) && (function_completion != -1)){
 			// Allocating new memory for each node, data = 0
@@ -79,7 +87,9 @@ long enqueue_buffer_421(char *data){
 		//////////////
                 // sem lock //
                 //////////////
-		//wake_up(consumer);
+		sem_wait(mutex);
+		sem_wait(producer_full);
+		//carried out so that the consumer process cannot interfere
 		function_completion = -1;
 	// Insert the int i into the next node, increment buffer length
 	// Returns 0 if insert is successful, otherwise -1 if it fails
@@ -89,8 +99,18 @@ long enqueue_buffer_421(char *data){
                	temp->data = data;
 	        buffer->write = temp->next;
 	        buffer->length++;
-
 		//successful insert
+
+		sem_post(mutex);
+		sem_post(producer_full);
+		sem_trywait(consumer_empty);
+		//if item is put in, signal operation is carried out on mutex and full - consumer 
+		// can now act
+
+		// print info
+		printf("Enqueue: %c", temp->data);
+		print_semaphores();
+
 		function_completion = 0;
 	}
 	return function_completion;
@@ -107,16 +127,32 @@ long dequeue_buffer_421(char *data){
                 function_completion = -1;
 	}else if(buffer->length == 0){
 		// buffer is empty
-		//////////////
-		// sem lock //
-		//////////////
+		////////////////////////////
+		// sem lock 
+		// Producer cannot interfere
+		////////////////////////////
+		sem_wait(consumer_empty);
+		sem_wait(mutex);
+		//producer cannot interfere
 		function_completion = -1;
 	}else{
 		struct node_421* temp = buffer->read;
+		char temp_data = temp->data;
 		temp->data = 0;
 		buffer->read = temp->next;
 		buffer->length--;
 		function_completion = 0;
+
+		//unlock sem, consumer can now act
+		sem_post(mutex);
+		sem_post(consumer_empty);
+		sem_trywait(producer_full);
+
+		//print info
+		printf("Dequeue: %c", temp_data);
+                print_semaphores();
+
+		function_completion = -1;
 	}
 	return function_completion;
 
@@ -139,6 +175,11 @@ long delete_buffer_421(void){
 			free(temp);
 			round--;
 		}
+
+		sem_destroy(consumer_empty);
+		sem_destroy(producer_full);
+		sem_destroy(mutex);
+
 		head = NULL;
 	}else{
                 printf("No buffer exists\n");
@@ -154,31 +195,17 @@ long delete_buffer_421(void){
 }
 
 void print_semaphores(void){
-	/////////////////////////////////////////////
-	// this should execute when consumer 
-	/////////////////////////////////////////////
-        long function_completion = 0;
-	// check if buffer is initialized, fail if not
+	// print status of semaphore
+	long_completion = 0;
 	if(head == NULL){
-		printf("Unable to print: buffer is emtpy, try to initialize\n");
-		function_completion = -1;
-	// reader is up to date, nothing to print
-	}else if((buffer->read == buffer->write) && (buffer->read != head) && (buffer->length == SIZE_OF_BUFFER)){
-		printf("Unable to print: read is same as print\n");
+		printf("Unable to print: buffer is empty, try to initialize\n");
 		function_completion = -1;
 	}else{
-		// insert new data and move write pointer up
-		struct node_421* temp;
-		temp = buffer->read;
-                fprintf(stdout, "Node data: %d\n",temp->data);
-                buffer->read = temp->next;
-		while(buffer->read != buffer->write){
-			temp = buffer->read;
-			fprintf(stdout, "Node data: %d\n",temp->data);
-			buffer->read = temp->next;
-		}
-		function_completion = 0;
+		printf("sema mutex = %d", sem_getvalue(mutex));
+		printf("\n");
+		printf("sema fill_count = %d", sem_getvalue(producer_full));
+		printf("\n");
+		printf("sema empty_count = %d", sem_getvalue(consumer_empty));
+		printf("\n");
 	}
-        return function_completion;
-
 }

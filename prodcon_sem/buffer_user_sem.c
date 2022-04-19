@@ -103,7 +103,7 @@ long enqueue_buffer_421(char *data){
 
 		sem_post(mutex);
 		sem_post(producer_full);
-		sem_trywait(consumer_empty);
+		sem_post(consumer_empty);
 		//if item is put in, signal operation is carried out on mutex and full - consumer 
 		// can now act
 
@@ -146,7 +146,7 @@ long dequeue_buffer_421(char *data){
 		//unlock sem, consumer can now act
 		sem_post(mutex);
 		sem_post(consumer_empty);
-		sem_trywait(producer_full);
+		sem_post(producer_full);
 
 		//print info
 		printf("Dequeue: %c", temp_data);
@@ -201,11 +201,12 @@ void print_semaphores(void){
 		printf("Unable to print: buffer is empty, try to initialize\n");
 		function_completion = -1;
 	}else{
-		printf("sema mutex = %d", sem_getvalue(mutex));
+		printf("sema mutex = %d", sem_getvalue(mutex, int *valp));
 		printf("\n");
-		printf("sema fill_count = %d", sem_getvalue(producer_full));
+		printf("sema fill_count = %d", buffer->length));
 		printf("\n");
-		printf("sema empty_count = %d", sem_getvalue(consumer_empty));
+		int size = SIZE_OF_BUFFER:
+		printf("sema empty_count = %d", (size - buffer->length));
 		printf("\n");
 	}
 }

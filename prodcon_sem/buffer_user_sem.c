@@ -2,17 +2,19 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <string.h>
 
-#include "buffer.h"
+#include "buffer_sem.h"
 
 // Global variables
-struct node_421* head = NULL;
-struct ring_buffer_421* buffer = NULL;
+struct bb_node_421* head = NULL;
+struct bb_buffer_421* buffer = NULL;
 int bufferLength = 0;
 
 sem_t consumer_empty;
 sem_t producer_full;
-sem_t mutex;
+pthread_mutex_t mutex;
+
 
 long init_buffer_421(void){
 	long function_completion = 0;
@@ -20,16 +22,15 @@ long init_buffer_421(void){
 		printf("Buffer not empty, try to delete\n");
 		function_completion = -1;
 	}else{
-		int sem_init(consumer_empty, 0, 20);
-		int sem_init(producer_full, 0, 0)
-
+		sem_init(&consumer_empty, 0, 0);
+		sem_init(&producer_full, 0, 0);
 
 		// Initialize new buffer - 20 nodes
        		while((bufferLength < SIZE_OF_BUFFER) && (function_completion != -1)){
 			// Allocating new memory for each node, data = 0
-			struct node_421* newNode; 
-			newNode =(struct node_421*) malloc(sizeof(struct node_421));
-			newNode->data = 0;
+			struct bb_node_421* newNode;
+			newNode =(struct bb_node_421*) malloc(sizeof(struct bb_node_421));
+			newNode->data[DATA_LENGTH];
 			newNode->next = NULL;
 			if(newNode == NULL){
 				printf("Error!\n");
@@ -38,7 +39,7 @@ long init_buffer_421(void){
 				head = newNode;
 				bufferLength++;
 			}else{
-				struct node_421 *temp = head;
+				struct bb_node_421 *temp = head;
 				while(temp->next != NULL){
 					temp=temp->next;
 				}
@@ -47,7 +48,7 @@ long init_buffer_421(void){
 			}
 		}
 		//connect last added node to head
-		struct node_421 *temp = head;
+		struct bb_node_421* temp = head;
                 while(temp->next != NULL){
                 	temp=temp->next;
 			//temp->next = head;
@@ -55,8 +56,8 @@ long init_buffer_421(void){
 		temp->next = head;
 	}
 	//make start buffer
-	struct ring_buffer_421* buff_node;
-	buff_node = (struct ring_buffer_421*) malloc (sizeof(struct ring_buffer_421));
+	struct bb_buffer_421* buff_node;
+	buff_node = (struct bb_buffer_421*) malloc (sizeof(struct bb_buffer_421));
 	buffer = buff_node;
 	buffer->length = 0;
 	buffer->read = head;
@@ -77,6 +78,7 @@ long enqueue_buffer_421(char *data){
 	// enqueue ;; producer
 	/////////////////////////
 	long function_completion = 0;
+	//int num = data + '0';
 	// check if buffer is initialized, fail if not
 	if(head == NULL){
 		printf("uninitialized buffer\n");
@@ -87,29 +89,43 @@ long enqueue_buffer_421(char *data){
 		//////////////
                 // sem lock //
                 //////////////
-		sem_wait(mutex);
-		sem_wait(producer_full);
+		//pthread_mutex_lock(&mutex);
+		sem_wait(&producer_full);
+		//sem_wait(&producer_full);
+		sem_post(&consumer_empty);
 		//carried out so that the consumer process cannot interfere
 		function_completion = -1;
 	// Insert the int i into the next node, increment buffer length
 	// Returns 0 if insert is successful, otherwise -1 if it fails
 	}else{
+		//sem_post(&producer_full);
+		//printf("before insert\n");
+		//sem_wait(&consumer_empty);
 		//regular insert into buffer
-		struct node_421* temp = buffer->write;
-               	temp->data = data;
+		struct bb_node_421* temp = buffer->write;
+               	//printf("Before copy\n");
+		strcpy(buffer->write->data, data);
 	        buffer->write = temp->next;
 	        buffer->length++;
 		//successful insert
 
-		sem_post(mutex);
-		sem_post(producer_full);
-		sem_post(consumer_empty);
+
+		//sem_wait(&consumer_empty);
+		//printf("insert success\n");
+		//printf("Enqueue: %c", data[0]);
+                //print_semaphores();
+
+		//pthread_mutex_unlock(&mutex);
+		sem_post(&producer_full);
+		//sem_post(&consumer_empty);
 		//if item is put in, signal operation is carried out on mutex and full - consumer 
 		// can now act
 
 		// print info
-		printf("Enqueue: %c", temp->data);
+		printf("Enqueue: %c\n", data[0]);
 		print_semaphores();
+
+		//sem_post(&producer_full);
 
 		function_completion = 0;
 	}
@@ -131,28 +147,40 @@ long dequeue_buffer_421(char *data){
 		// sem lock 
 		// Producer cannot interfere
 		////////////////////////////
-		sem_wait(consumer_empty);
-		sem_wait(mutex);
-		//producer cannot interfere
+		//sem_post(&consumer_empty);
+		//sem_wait(&consumer_empty);
+		//sem_post(&producer_full);
+		sem_wait(&consumer_empty);
+		sem_post(&producer_full);
+		//pthread_mutex_lock(&mutex);
 		function_completion = -1;
 	}else{
-		struct node_421* temp = buffer->read;
-		char temp_data = temp->data;
-		temp->data = 0;
+		//sem_wait(&producer_full);
+		struct bb_node_421* temp = buffer->read;
+		char temp_data[DATA_LENGTH];
+		strcpy(temp_data, buffer->read->data);
+		buffer->read->data[0] = 0;
 		buffer->read = temp->next;
 		buffer->length--;
 		function_completion = 0;
 
+		//sem_wait(&producer_full);
+
 		//unlock sem, consumer can now act
-		sem_post(mutex);
-		sem_post(consumer_empty);
-		sem_post(producer_full);
+		//pthread_mutex_unlock(&mutex);
+		//printf("Dequeue: %c", temp_data[0]);
+                //print_semaphores();
+
+		//sem_post(&consumer_empty);
+		//sem_post(&consumer_empty);
 
 		//print info
-		printf("Dequeue: %c", temp_data);
+		printf("Dequeue: %c\n", temp_data[0]);
                 print_semaphores();
 
-		function_completion = -1;
+		sem_post(&consumer_empty);
+
+		function_completion = 0;
 	}
 	return function_completion;
 
@@ -167,7 +195,7 @@ long delete_buffer_421(void){
 		buffer = NULL;
 		//if buffer exists, delete
 		// write your code to delete buffer and other unwanted components
-		struct node_421* temp;
+		struct bb_node_421* temp;
         	temp = head;
 		while(round != 0){
 			temp = head;
@@ -176,9 +204,9 @@ long delete_buffer_421(void){
 			round--;
 		}
 
-		sem_destroy(consumer_empty);
-		sem_destroy(producer_full);
-		sem_destroy(mutex);
+		sem_destroy(&consumer_empty);
+		sem_destroy(&producer_full);
+		pthread_mutex_destroy(&mutex);
 
 		head = NULL;
 	}else{
@@ -196,16 +224,15 @@ long delete_buffer_421(void){
 
 void print_semaphores(void){
 	// print status of semaphore
-	long_completion = 0;
 	if(head == NULL){
 		printf("Unable to print: buffer is empty, try to initialize\n");
-		function_completion = -1;
 	}else{
-		printf("sema mutex = %d", sem_getvalue(mutex, int *valp));
+
+		//printf("sema mutex = %d", sem_getvalue(&mutex, int *valp));
+		//printf("\n");
+		printf("sema fill_count = %d", buffer->length);
 		printf("\n");
-		printf("sema fill_count = %d", buffer->length));
-		printf("\n");
-		int size = SIZE_OF_BUFFER:
+		int size = SIZE_OF_BUFFER;
 		printf("sema empty_count = %d", (size - buffer->length));
 		printf("\n");
 	}

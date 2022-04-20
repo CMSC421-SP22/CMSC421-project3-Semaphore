@@ -11,10 +11,10 @@ struct bb_node_421* head = NULL;
 struct bb_buffer_421* buffer = NULL;
 int bufferLength = 0;
 
-sem_t consumer_empty;
-sem_t producer_full;
+pthread_cond_t consumer_empty;
+pthread_cond_t producer_full;
 pthread_mutex_t mutex;
-
+int nfull = 0;
 
 long init_buffer_421(void){
         long function_completion = 0;
@@ -22,11 +22,9 @@ long init_buffer_421(void){
                 printf("Buffer not empty, try to delete\n");
                 function_completion = -1;
         }else{
-                sem_init(&consumer_empty, 0, 20);
-                sem_init(&producer_full, 0, 0);
-                //pthread_mutex_init(&mutex, NULL);
-                sem_init(&mutex, 0, 0);
-
+                pthread_cond_init(&consumer_empty, 0, 20);
+                pthread_cond_init(&producer_full, 0, 0);
+                pthread_mutex_init(&mutex, NULL);
                 // Initialize new buffer - 20 nodes
                 while((bufferLength < SIZE_OF_BUFFER) && (function_completion != -1)){
                         // Allocating new memory for each node, data = 0
@@ -86,10 +84,10 @@ long enqueue_buffer_421(char *data){
         // Insert the int i into the next node, increment buffer length
         // Returns 0 if insert is successful, otherwise -1 if it fails
         }else{
-                if(buffer->length == SIZE_OF_BUFFER){
-                        sem_wait(&consumer_empty);
-                //      pthread_mutex_lock(&mutex);
-                        sem_wait(&mutex);
+                if(nfull == SIZE_OF_BUFFER){
+                        pthread_cond_wait(&consumer_empty);
+                        pthread_mutex_lock(&mutex);
+                        //sem_wait(&mutex);
                 }else{
                 struct bb_node_421* temp = buffer->write;
                 strcpy(buffer->write->data, data);
@@ -97,10 +95,10 @@ long enqueue_buffer_421(char *data){
 
                 int l = buffer->length;
                 buffer->length = (l + 1)%20;
-                print_semaphores();
+		nfull++
 
-                sem_post(&producer_full);
-                sem_post(&mutex);
+		pthread_mutex_unlock(&mutex);
+                pthread_cond_signal(&producer_full);
                 }
 
                 function_completion = 0;
@@ -119,23 +117,24 @@ long dequeue_buffer_421(char *data){
                 printf("uninitialized buffer\n");
                 function_completion = -1;
         }else{
-                if(buffer->length == 0){
-                        sem_wait(&producer_full);
-                //      pthread_mutex_lock(&mutex);
-                        sem_wait(&mutex);
+		
+               	if(nfull == 0){
+                        pthread_cond_wait(&producer_full);
+                        pthread_mutex_lock(&mutex);
                 }else{
-                struct bb_node_421* temp = buffer->read;
-                buffer->read->data[0] = 0;
-                buffer->read = temp->next;
-                int l = buffer->length;
-                buffer->length = (l - 1)%20;
-                print_semaphores();
+                	struct bb_node_421* temp = buffer->read;
+                	buffer->read->data[0] = 0;
+                	buffer->read = temp->next;
+                	int l = buffer->length;
+                	buffer->length = (l - 1)%20;
+			nfull--;
 
-                sem_post(&mutex);
-                sem_post(&consumer_empty);
+                	pthread_mutex_unlock(&mutex);
+                	pthread_cond_signal(&consumer_empty);
 
-                function_completion = 0;
+                	function_completion = 0;
                 }
+
         }
         return function_completion;
 
@@ -146,10 +145,10 @@ long delete_buffer_421(void){
         int round = SIZE_OF_BUFFER;
         //checks if buffer exist
 
-        //pthread_mutex_destroy(&mutex);
-        sem_destroy(&consumer_empty);
-        sem_destroy(&producer_full);
-        sem_destroy(&mutex);
+        pthread_cond_destroy(&consumer_empty);
+        pthread_cond_destroy(&producer_full);
+        pthread_mutex_destroy(&mutex);
+	//sem_destroy(&mutex);
 
         if(head != NULL){
                 free(buffer);
@@ -179,19 +178,3 @@ long delete_buffer_421(void){
 
 }
 
-
-void print_semaphores(void){
-        // print status of semaphore
-        if(head == NULL){
-                printf("Unable to print: buffer is empty, try to initialize\n");
-        }else{
-
-                //printf("sema mutex = %d", sem_getvalue(&mutex, int *valp));
-                //printf("\n");
-                printf("sema fill_count = %d", buffer->length);
-                printf("\n");
-                int size = SIZE_OF_BUFFER;
-                printf("sema empty_count = %d", (size - buffer->length));
-                printf("\n");
-        }
-}

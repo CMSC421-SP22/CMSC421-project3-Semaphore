@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -6,7 +7,7 @@
 
 #include "buffer_sem.h"
 
-int max_exec = 4; // max # of times it will produce/consume
+int max_exec = 2; // max # of times it will produce/consume
 
 int main(int argc, char *argv[]) {
         void *thread_result;
@@ -23,16 +24,16 @@ int main(int argc, char *argv[]) {
         pthread_t tid_producer;
         pthread_t tid_consumer;
 
-        prod_cons_exec = (rand() % 10);
-        printf("number exec: prod_cons_exec %d \n", prod_cons_exec);
-
+	//multiple loops of executing producer + consumer
         for(int i = 0; i < max_exec; i++){
-                time_exec = (rand() % 30);
+                time_exec = (rand() % 10);
+
+		printf(".....Printing producer/enqueue now.....\n");
                 // Producer thread
                 for(int i = 0; i < time_exec; i++){
                         sleep(rand() % 11);
                         char test_char[DATA_LENGTH] = {data_value};
-                        pthread_create(&tid_producer, NULL, (void *)enqueue_buffer_421, &test_c>
+                        pthread_create(&tid_producer, NULL, (void *)enqueue_buffer_421, &test_char);
                         printf("Producer: %d\n", data_value);
 
                         data_value++;
@@ -63,7 +64,7 @@ int main(int argc, char *argv[]) {
                 for(int i = 0; i < time_exec; i++){
                         sleep(rand() % 11);
                         char test_char[DATA_LENGTH] = {data_value};
-                        pthread_create(&tid_consumer, NULL, (void *)dequeue_buffer_421, &test_c>
+                        pthread_create(&tid_consumer, NULL, (void *)dequeue_buffer_421, &test_char);
                         printf("Consumer: %d\n", data_value);
                         data_value++;
                         if(data_value >= 10){

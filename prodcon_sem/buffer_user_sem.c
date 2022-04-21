@@ -13,7 +13,7 @@ int bufferLength = 0;
 
 sem_t consumer_empty;
 sem_t producer_full;
-pthread_mutex_t mutex;
+sem_t mutex;
 
 
 long init_buffer_421(void){

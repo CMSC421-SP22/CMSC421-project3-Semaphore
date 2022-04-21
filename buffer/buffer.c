@@ -109,7 +109,7 @@ SYSCALL_DEFINE0(print_buffer_421){
                 buffer->read = temp->next;
 		while(buffer->read != buffer->write){
 			temp = buffer->read;
-			fprintf(stdout, "Node data: %d\n",temp->data);
+			printk("Node data: %d\n",temp->data);
 			buffer->read = temp->next;
 		}
 		function_completion = 0;

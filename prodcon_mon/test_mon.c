@@ -4,9 +4,9 @@
 #include <semaphore.h>
 #include <string.h>
 
-#include "buffer_sem.h"
+#include "buffer_mon.h"
 
-int max_exec = 4; // max # of times it will produce/consume
+int max_exec = 3; // max # of times it will produce/consume
 
 int main(int argc, char *argv[]) {
         void *thread_result;
@@ -23,16 +23,14 @@ int main(int argc, char *argv[]) {
         pthread_t tid_producer;
         pthread_t tid_consumer;
 
-        prod_cons_exec = (rand() % 10);
-        printf("number exec: prod_cons_exec %d \n", prod_cons_exec);
-
         for(int i = 0; i < max_exec; i++){
-                time_exec = (rand() % 30);
+                time_exec = (rand() % 10);
                 // Producer thread
-                for(int i = 0; i < time_exec; i++){
+                printf(".....Printing producer/enqueue now.....\n");
+		for(int i = 0; i < time_exec; i++){
                         sleep(rand() % 11);
                         char test_char[DATA_LENGTH] = {data_value};
-                        pthread_create(&tid_producer, NULL, (void *)enqueue_buffer_421, &test_c>
+                        pthread_create(&tid_producer, NULL, (void *)enqueue_buffer_421, &test_char);
                         printf("Producer: %d\n", data_value);
 
                         data_value++;
@@ -45,6 +43,7 @@ int main(int argc, char *argv[]) {
 
 
                 printf(".....waiting to print consumer/enqueue.....\n");
+		printf("%d\n", (data_value - time_exec));
 
                 //revert data-value for consumer
                 if((data_value - time_exec) < 0){
@@ -55,7 +54,7 @@ int main(int argc, char *argv[]) {
                         }
                         temp_n = temp_n % 10;
                         data_value = 9 - temp_n;
-                }else{
+		}else{
                         data_value = (data_value - time_exec) % 10;
                 }
 
@@ -63,7 +62,7 @@ int main(int argc, char *argv[]) {
                 for(int i = 0; i < time_exec; i++){
                         sleep(rand() % 11);
                         char test_char[DATA_LENGTH] = {data_value};
-                        pthread_create(&tid_consumer, NULL, (void *)dequeue_buffer_421, &test_c>
+                        pthread_create(&tid_consumer, NULL, (void *)dequeue_buffer_421, &test_char);
                         printf("Consumer: %d\n", data_value);
                         data_value++;
                         if(data_value >= 10){

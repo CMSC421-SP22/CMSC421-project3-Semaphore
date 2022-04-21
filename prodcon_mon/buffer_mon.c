@@ -4,11 +4,11 @@
 #include <semaphore.h>
 #include <string.h>
 
-#include "buffer_sem.h"
+#include "buffer_mon.h"
 
 // Global variables
-struct bb_node_421* head = NULL;
-struct bb_buffer_421* buffer = NULL;
+struct node_421* head = NULL;
+struct ring_buffer_421* buffer = NULL;
 int bufferLength = 0;
 
 pthread_cond_t consumer_empty;
@@ -22,14 +22,14 @@ long init_buffer_421(void){
                 printf("Buffer not empty, try to delete\n");
                 function_completion = -1;
         }else{
-                pthread_cond_init(&consumer_empty, 0, 20);
-                pthread_cond_init(&producer_full, 0, 0);
-                pthread_mutex_init(&mutex, NULL);
+		pthread_mutex_init(&mutex, NULL);
+                pthread_cond_init(&consumer_empty, NULL);
+                pthread_cond_init(&producer_full, NULL);
                 // Initialize new buffer - 20 nodes
                 while((bufferLength < SIZE_OF_BUFFER) && (function_completion != -1)){
                         // Allocating new memory for each node, data = 0
-                        struct bb_node_421* newNode;
-                        newNode =(struct bb_node_421*) malloc(sizeof(struct bb_node_421));
+                        struct node_421* newNode;
+                        newNode =(struct node_421*) malloc(sizeof(struct node_421));
                         newNode->data[DATA_LENGTH];
                         newNode->next = NULL;
 			if(newNode == NULL){
@@ -39,7 +39,7 @@ long init_buffer_421(void){
 				head = newNode;
 				bufferLength++;
 			}else{
-				struct bb_node_421 *temp = head;
+				struct node_421 *temp = head;
 				while(temp->next != NULL){
 					temp=temp->next;
 				}
@@ -48,7 +48,7 @@ long init_buffer_421(void){
 			}
 		}
 		//connect last added node to head
-		struct bb_node_421* temp = head;
+		struct node_421* temp = head;
                 while(temp->next != NULL){
                 	temp=temp->next;
 			//temp->next = head;
@@ -56,8 +56,8 @@ long init_buffer_421(void){
 		temp->next = head;
 	}
 	//make start buffer
-	struct bb_buffer_421* buff_node;
-	buff_node = (struct bb_buffer_421*) malloc (sizeof(struct bb_buffer_421));
+	struct ring_buffer_421* buff_node;
+	buff_node = (struct ring_buffer_421*) malloc (sizeof(struct ring_buffer_421));
 	buffer = buff_node;
 	buffer->length = 0;
 	buffer->read = head;
@@ -84,18 +84,19 @@ long enqueue_buffer_421(char *data){
         // Insert the int i into the next node, increment buffer length
         // Returns 0 if insert is successful, otherwise -1 if it fails
         }else{
+		
                 if(nfull == SIZE_OF_BUFFER){
-                        pthread_cond_wait(&consumer_empty);
-                        pthread_mutex_lock(&mutex);
+                        pthread_cond_wait(&consumer_empty, &mutex);
+                        //pthread_mutex_lock(&mutex);
                         //sem_wait(&mutex);
                 }else{
-                struct bb_node_421* temp = buffer->write;
+                struct node_421* temp = buffer->write;
                 strcpy(buffer->write->data, data);
                 buffer->write = temp->next;
 
                 int l = buffer->length;
                 buffer->length = (l + 1)%20;
-		nfull++
+		nfull++;
 
 		pthread_mutex_unlock(&mutex);
                 pthread_cond_signal(&producer_full);
@@ -119,10 +120,10 @@ long dequeue_buffer_421(char *data){
         }else{
 		
                	if(nfull == 0){
-                        pthread_cond_wait(&producer_full);
-                        pthread_mutex_lock(&mutex);
+                        pthread_cond_wait(&producer_full, &mutex);
+                       // pthread_mutex_lock(&mutex);
                 }else{
-                	struct bb_node_421* temp = buffer->read;
+                	struct node_421* temp = buffer->read;
                 	buffer->read->data[0] = 0;
                 	buffer->read = temp->next;
                 	int l = buffer->length;
@@ -155,7 +156,7 @@ long delete_buffer_421(void){
                 buffer = NULL;
                 //if buffer exists, delete
                 // write your code to delete buffer and other unwanted components
-                struct bb_node_421* temp;
+                struct node_421* temp;
                 temp = head;
                 while(round != 0){
                         temp = head;
